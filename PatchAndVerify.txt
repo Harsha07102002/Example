@@ -1,0 +1,57 @@
+package RestAssured6;
+
+import static io.restassured.RestAssured.given;
+
+import org.testng.Assert;
+import org.testng.annotations.Test;
+
+import io.restassured.RestAssured;
+import io.restassured.response.Response;
+
+public class PartialUpdateTest {
+	String id;
+	@Test
+	 void verifyAddProduct()
+	 {
+		 RestAssured.useRelaxedHTTPSValidation();
+		 String jsonBody = """
+				{
+				    "name": "Apple MacBook Pro 16",
+				    "data": {
+				       "year": 2019,
+				       "price": 1849.99,
+				       "CPU model": "Intel Core i9",
+				       "Hard disk size": "1 TB"
+				    }
+				 }
+		 		""";
+		 		id=given()
+				.header("Content-Type","application/json")
+				.body(jsonBody)
+		  .when() 
+		  	.post("https://api.restful-api.dev/objects")
+		  .then()
+		  	 .extract().jsonPath().getString("id");
+//		 System.out.println(id);
+	 }
+	 
+	 @Test(dependsOnMethods="verifyAddProduct")
+	 void updateNameOnly()
+	 {
+		 RestAssured.useRelaxedHTTPSValidation();
+		 String jsonPartial = """
+						{
+		 		   "name": "Apple MacBook Pro 16 (Updated Name)"
+		 			}
+		 		""";
+		Response response= given()
+			.header("Content-Type","application/json")
+			.body(jsonPartial)
+		 .when()
+		 	.patch("https://api.restful-api.dev/objects/"+id);
+		Assert.assertEquals(response.getStatusCode(),200,"Expected status code is 200");
+		Assert.assertEquals(response.jsonPath().getString("name"),"Apple MacBook Pro 16 (Updated Name)");
+		System.out.println("Updated Details: \n"+response.prettyPrint());
+		System.out.println("Updated name is: \n"+response.jsonPath().getString("name"));
+	 }
+}
